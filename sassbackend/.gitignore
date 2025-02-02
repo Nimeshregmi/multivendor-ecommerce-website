@@ -1,0 +1,14 @@
+.venv
+venv
+venv/*
+venv/
+.env
+__pycache__
+_pycache_
+__pycache__/*
+*/__pycache__/*
+migrations
+migrations/*
+uploads/*
+uploads/
+

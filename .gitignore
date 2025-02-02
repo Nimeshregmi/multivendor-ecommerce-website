@@ -1,0 +1,73 @@
+# ---- Frontend: multivender-ecommerce-frontend ----
+
+# Dependencies
+multivender-ecommerce-frontend/node_modules/
+.pnp
+.pnp.js
+
+# Next.js build and output folders
+multivender-ecommerce-frontend/.next/
+multivender-ecommerce-frontend/out/
+
+# Static build files
+multivender-ecommerce-frontend/build/
+
+# Testing
+multivender-ecommerce-frontend/coverage/
+
+# Production
+multivender-ecommerce-frontend/build/
+
+# Miscellaneous
+multivender-ecommerce-frontend/.DS_Store
+multivender-ecommerce-frontend/npm-debug.log*
+multivender-ecommerce-frontend/yarn-debug.log*
+multivender-ecommerce-frontend/yarn-error.log*
+
+# Local environment files
+multivender-ecommerce-frontend/.env.local
+multivender-ecommerce-frontend/.env.development.local
+multivender-ecommerce-frontend/.env.test.local
+multivender-ecommerce-frontend/.env.production.local
+
+# Vercel deployment
+multivender-ecommerce-frontend/.vercel/
+multivender-ecommerce-frontend/.vscode/
+
+# Typescript
+multivender-ecommerce-frontend/*.tsbuildinfo
+multivender-ecommerce-frontend/next-env.d.ts
+
+
+# ---- Backend: ecommercebackend ----
+
+# Python files
+ecommercebackend/*.pyc
+ecommercebackend/*.pyo
+ecommercebackend/*.pyd
+ecommercebackend/__pycache__/
+ecommercebackend/*.env
+ecommercebackend/.env.local
+ecommercebackend/env/
+ecommercebackend/venv/
+ecommercebackend/.venv/
+ecommercebackend/Pipfile.lock
+ecommercebackend/*.log
+
+# Django specific
+ecommercebackend/db.sqlite3
+ecommercebackend/db.sqlite3-journal
+ecommercebackend/media/
+ecommercebackend/staticfiles/
+
+# Django Migrations
+ecommercebackend/**/migrations/
+ecommercebackend/**/migrations/*.pyc
+
+# IDE files
+ecommercebackend/.vscode/
+ecommercebackend/.idea/
+
+# OS generated files
+ecommercebackend/.DS_Store
+ecommercebackend/Thumbs.db
