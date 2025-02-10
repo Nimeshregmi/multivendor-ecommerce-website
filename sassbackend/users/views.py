@@ -1,29 +1,15 @@
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes
 from rest_framework import status
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import RefreshToken # type: ignore
-from django.contrib.auth import authenticate
-# from rest_framework_simplejwt.tokens import RefreshToken
-
 
 # from inbox.models import Notification
 from .serilizers import *
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes,permission_classes
-from django.middleware.csrf import get_token
-from django.http import JsonResponse
-from .services import get_user_data, helper_function_google
-from django.shortcuts import redirect
 from django.conf import settings
-from django.contrib.auth import login
 from rest_framework.views import APIView
-from django.http import HttpResponse
 from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
 from django.contrib.auth.hashers import check_password, make_password
@@ -38,6 +24,10 @@ from rest_framework_simplejwt.tokens import UntypedToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
+from django.core.mail import send_mail
+from rest_framework.exceptions import AuthenticationFailed
+# from .utils import Utils
+
 
 User = get_user_model()
 class CustomTokenVerifyView(TokenVerifyView):
@@ -77,7 +67,26 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         # print(data)
         access_token = response.data.get('access')
         refresh_token = response.data.get('refresh')
+        email = request.data.get('email')
+        user = User.objects.filter(email=email).first()
 
+        if user and not user.is_verified:
+            user.generate_verification_token()
+
+            # Build an absolute verification link using the token
+            # request = self.context.get('request')
+            # Construct verification link using FRONTEND_URL
+            verification_link = f"{settings.FRONTEND_URL}/auth/verify-email/{user.verification_token}"
+
+            # Send verification email
+            send_mail(
+                subject='Verify Your Email',
+                message=f'Click the link to verify your email: {verification_link}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            raise AuthenticationFailed("Your email is not verified. Please check your email.")
         if access_token and refresh_token:
             # Set secure cookies
             response.set_cookie(
@@ -152,42 +161,40 @@ class CustomTokenRefreshView(TokenRefreshView):
 # tested
 @api_view(['POST'])
 def signup(request):
-    data = request.data
-    serializer = UserSerializer(data=data, context={'request': request})
+    serializer = UserSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
-        instance = serializer.save()
-
-        # Generate verification token
-        instance.generate_verification_token()
-
-        # Send verification email
-        verification_link = request.build_absolute_uri(
-            reverse('verify-email', kwargs={'token': instance.verification_token})
-        )
-        send_mail(
-            'Verify Your Email',
-            f'Click the link to verify your email: {verification_link}',
-            settings.DEFAULT_FROM_EMAIL,
-            [instance.email],
-            fail_silently=False,
-        )
-
-        # Welcome email
-        title = "Welcome to Ecommerce"
-        content = "You have successfully registered. Please check your email to verify your account."
-        send_mail(
-            title,
-            content,
-            settings.DEFAULT_FROM_EMAIL,
-            [instance.email],
-            fail_silently=False,
-        )
-
+        serializer.save()
         return Response(
             {'message': 'User registered. Check your email for verification.'},
             status=status.HTTP_201_CREATED
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#tested
+@api_view(['POST'])
+def verify_email(request):
+    """
+    Verifies the user's email using the token.
+    The URL should include the token, e.g., /verify-email/<token>/
+    """
+    token = request.data.get("slug")
+    # print(token)
+    user = get_object_or_404(User, verification_token=token)
+    if user.is_token_valid():
+        user.is_verified = True
+        # Optionally clear the token and its timestamp after successful verification
+        user.verification_token = None
+        user.token_created_at = None
+        user.save()
+        return Response(
+            {'message': 'Email verified successfully.'},
+            status=status.HTTP_200_OK
+        )
+    else:
+        return Response(
+            {'error': 'Verification token is invalid or expired.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 #tested
 @api_view(['POST'])
@@ -248,26 +255,6 @@ class UserProfileUpdateView(APIView):
             except IntegrityError:
                 return Response({"error": "A user with this email or username already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class EmailVerificationView(APIView):
-    def post(self, request):
-        serializer = EmailVerificationSerializer(data=request.data)
-        if serializer.is_valid():
-            token = serializer.validated_data['token']
-            try:
-                user = User.objects.get(verification_token=token)
-                if user.is_token_valid():
-                    user.is_verified = True
-                    user.verification_token = None
-                    user.token_created_at = None
-                    user.save()
-                    return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
-                else:
-                    user.delete()
-                    return Response({'message': 'Verification link expired. Please sign up again.'}, status=status.HTTP_400_BAD_REQUEST)
-            except ObjectDoesNotExist:
-                return Response({'message': 'Invalid token.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class BusinessDetailsUpdateView(APIView):

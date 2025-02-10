@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, UserProfile, BusinessDetails
+from .models import User, UserProfile, BusinessDetails,Address
 
 class UserAdmin(admin.ModelAdmin):
     list_display = ['username', 'email', 'role', 'is_active', 'is_staff', 'is_superuser']
@@ -37,3 +37,4 @@ class BusinessDetailsAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(BusinessDetails, BusinessDetailsAdmin)
+admin.site.register(Address)

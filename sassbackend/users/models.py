@@ -3,6 +3,9 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.crypto import get_random_string
+from datetime import timedelta, datetime
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -27,21 +30,25 @@ class UserManager(BaseUserManager):
 
 class Address(models.Model):
     class Meta:
-        db_table = 'address'  
-
-    id = models.AutoField(primary_key=True)
-    street_address = models.CharField(max_length=255, null=True, blank=True)
-    city = models.CharField(max_length=255, null=True, blank=True)
-    state = models.CharField(max_length=255, null=True, blank=True)
-    country = models.CharField(max_length=255, null=True, blank=True)
-    country_code = models.CharField(max_length=255, null=True, blank=True)
-    longitude = models.CharField(max_length=50, null=True, blank=True)
-    latitude = models.CharField(max_length=50, null=True, blank=True)
-    postal_code = models.CharField(max_length=255, null=True, blank=True)
-    default = models.BooleanField(default=False)
+        db_table = 'address' 
+         
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+     on_delete=models.CASCADE, 
+     related_name="addresses",
+       
+    )
+    street_address = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    country_code = models.CharField(max_length=10, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         return f"{self.street_address}, {self.city}, {self.country}"
+
+
+
 class BusinessDetails(models.Model):
     class Meta:
         db_table = 'businessdetails'  
@@ -88,14 +95,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=10, choices=ROLES, default='buyer')
     created_at = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)  #Email verification
-    verification_token = models.CharField(max_length=100, blank=True, null=True) #Verification token
+    verification_token = models.CharField(max_length=100,unique=True, blank=True, null=True) #Verification token
     token_created_at = models.DateTimeField(blank=True, null=True) #token lifetime
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_seller_approved = models.BooleanField(default=False)  # Admin approval for sellers
     business_details = models.ForeignKey(BusinessDetails,related_name='business_details_user', on_delete=models.CASCADE, null=True, blank=True)
-    address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True, related_name='user_address')
     objects = UserManager()
     auth_provider = models.CharField(max_length=255, default=AUTH_PROVIDER['email'], blank=False)
     profile_info = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='user_profile', null=True, blank=True)
@@ -108,13 +115,20 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def is_seller(self):
         return self.role == 'seller' and self.is_seller_approved
-        
+
     def generate_verification_token(self):
-        self.verification_token = get_random_string(50)
+        """Generates a unique verification token and saves it."""
+        while True:
+            token = get_random_string(50)  # Generate a random 50-character token
+            if not User.objects.filter(verification_token=token).exists():
+                self.verification_token = token
+                break  # Exit loop once we get a unique token
+
         self.token_created_at = timezone.now()
         self.save()
 
     def is_token_valid(self):
+        """Checks if the token is still valid (for example, within 10 minutes)."""
         if self.token_created_at:
             return timezone.now() <= self.token_created_at + timedelta(minutes=10)
         return False

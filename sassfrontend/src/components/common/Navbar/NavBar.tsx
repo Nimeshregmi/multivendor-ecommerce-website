@@ -8,7 +8,7 @@ const NavBar = () => {
       <div className="flex flex-wrap place-items-start ">
         <section className=" ">
           {/* <!-- navbar --> */}
-          <nav className="flex justify-between dark:bg-gray-900 bg-gray-300  max-w-[1700px] mx-auto text-gray-900 dark:text-white w-screen">
+          <nav className="flex justify-between dark:bg-gray-900 bg-slate-300  max-w-[1700px] mx-auto text-gray-900 dark:text-white w-screen">
             <div className="px-5 xl:px-12 py-6 flex w-full items-center">
               <>
                 <a className="text-3xl font-bold font-heading" href="/">

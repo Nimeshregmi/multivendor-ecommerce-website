@@ -5,7 +5,7 @@ const page = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
   return (
     <>
-    <CardWrapper title={`${params.slug} Category`} >
+    {/* <CardWrapper title={`${params.slug} Category`} >
       <ProductCard/>
       <ProductCard/>
       <ProductCard/>
@@ -14,7 +14,7 @@ const page = async (props: { params: Promise<{ slug: string }> }) => {
       <ProductCard/>
       <ProductCard/>
       <ProductCard/>
-    </CardWrapper>
+    </CardWrapper> */}
     </>
   )
 }

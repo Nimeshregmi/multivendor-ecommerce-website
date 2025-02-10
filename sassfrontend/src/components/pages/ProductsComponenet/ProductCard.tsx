@@ -1,109 +1,131 @@
-import Image from "next/image";
-// import { BsCartCheckFill } from "react-icons/bs";
-// import { FaHeart } from "react-icons/fa";
-import Rating from "./Rating";
+import { Star } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
-interface Props {
-  image?: string;
-  title?: string;
-  rating?: number;
-  price?: number;
-  id?: number;
-  categories?: boolean;
-  vendor?: boolean;
-  downloaded?: number;
-  vendorCategories?: string[];
+interface Product {
+  id: number
+  name: string
+  price: number
+  rating: number
+  reviews: number
+  image: string
+  category: string
 }
-const testVendorCategory = ["python", "javascript", "java"];
-const ProductCard = ({
-  image = "/logo/logo.png",
-  price = 220,
-  rating = 4.7,
-  title = "Python",
-  id = 1,
-  categories = false,
-  vendor = false,
-  downloaded = 225,
-  vendorCategories = testVendorCategory,
-}: Props) => {
-  const fullhref = `${
-    categories
-      ? "catagory/" + title.toLowerCase()
-      : vendor
-      ? "vendor/" + title.toLowerCase()
-      : "products/" + title.toLowerCase() + "/" + id
-  }`;
+
+const products: Product[] = [
+  {
+    id: 1,
+    name: 'Apple iMac 27", 1TB HDD, Retina 5K Display, M3 Max',
+    price: 2499,
+    rating: 4.8,
+    reviews: 2866,
+    image: "/logo/logo.png",
+    category: "Computers",
+  },
+  {
+    id: 2,
+    name: 'Apple iMac 27", 1TB HDD, Retina 5K Display, M3 Max',
+    price: 2499,
+    rating: 4.8,
+    reviews: 2866,
+    image: "/logo/logo.png",
+    category: "Computers",
+  },
+  {
+    id: 3,
+    name: 'Apple iMac 27", 1TB HDD, Retina 5K Display, M3 Max',
+    price: 2499,
+    rating: 4.8,
+    reviews: 2866,
+    image: "/logo/logo.png",
+    category: "Computers",
+  },
+  {
+    id: 4,
+    name: 'Apple iMac 27", 1TB HDD, Retina 5K Display, M3 Max',
+    price: 2499,
+    rating: 4.8,
+    reviews: 2866,
+    image: "/logo/logo.png",
+    category: "Computers",
+  },
+  // Add more products here
+]
+
+interface ProductGridProps {
+  filters: {
+    category: string[]
+    priceRange: number[]
+    rating: number | null
+  }
+  sort: string
+  search: string
+}
+
+export default function ProductGrid({ filters, sort, search }: ProductGridProps) {
+  const filteredProducts = products
+    .filter((product) => {
+      // Category filter
+      if (filters.category.length > 0 && !filters.category.includes(product.category)) {
+        return false
+      }
+      // Price filter
+      if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
+        return false
+      }
+      // Search filter
+      if (search && !product.name.toLowerCase().includes(search.toLowerCase())) {
+        return false
+      }
+      return true
+    })
+    .sort((a, b) => {
+      switch (sort) {
+        case "price-asc":
+          return a.price - b.price
+        case "price-desc":
+          return b.price - a.price
+        case "rating":
+          return b.rating - a.rating
+        default:
+          return 0
+      }
+    })
 
   return (
-    <>
-      <div className="max-w-2xl mx-auto">
-        <div className="  bg-white bg-opacity-50   bg-clip-padding backdrop-filter backdrop-blur-lg  border border-gray-100 shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-200">
-          <a href="#">
-            <Image
-              width={900}
-              height={900}
-              loading="lazy"
-              className="rounded-t-lg p-8 hover:scale-110 transition-all ease-in-out duration-700"
-              src={`${image}`}
-              alt={title}
-            />
-          </a>
-          <div className="px-5 pb-5">
-            <a href={`${fullhref}`}>
-              <h3 className="text-gray-900 font-semibold text-xl tracking-tight dark:text-white">
-                {title}
-              </h3>
-            </a>
-            <Rating rating={rating} />
-            {!categories && !vendor && (
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                  ${price}
-                </span>
-                <div className="flex gap-2">
-                  <a
-                    href="#"
-                    className="text-white bg-blue-700 transition-all ease-in-out duration-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                  >
-                    {/* <BsCartCheckFill /> */}
-                  </a>
-                  <a
-                    href="#"
-                    className="text-white transition-all ease-in-out duration-700 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                  >
-                    {/* <FaHeart /> */}
-                  </a>
-                </div>
-              </div>
-            )}
-            {vendor && (
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold flex flex-wrap text-center text-gray-900 dark:text-white">
-                  Popular Category :{" "}
-                  {vendorCategories.map((item, i) => (
-                    <a
-                      key={i}
-                      className="underline text-red-600 hover:underline  text-md"
-                      href={`/catagory/${item.toLowerCase()}`}
-                    >
-                      {item},&nbsp;
-                    </a>
-                  ))}
-                </span>
-              </div>
-            )}
-            {categories && (
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  Product Downloaded :{downloaded.toString()}
-                </span>
-              </div>
-            )}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredProducts.map((product) => (
+        <div key={product.id} className="bg-slate-900 rounded-lg overflow-hidden border border-slate-800">
+          <div className="relative aspect-square">
+            <Image src={product.image || "/placeholder.svg"} alt={product.name} height={999999999} width={99999999} className="object-cover" />
+          </div>
+          <div className="p-4 space-y-4">
+            <h3 className="font-semibold text-white line-clamp-2">{product.name}</h3>
+            <div className="flex items-center gap-1">
+              {Array(5)
+                .fill(0)
+                .map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-slate-600"
+                    }`}
+                  />
+                ))}
+              <span className="text-sm text-slate-400">
+                {product.rating} ({product.reviews})
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold text-white">${product.price}</span>
+              <Button variant="outline" size="sm">
+                Add to cart
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </>
-  );
-};
+      ))}
+    </div>
+  )
+}
 
-export default ProductCard;

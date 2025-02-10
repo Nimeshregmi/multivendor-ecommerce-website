@@ -4,10 +4,13 @@ import hashlib
 import uuid
 # from api import settings
 from rest_framework import serializers
+from django.conf import settings
 
 from .models import *
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model 
+from django.urls import reverse
+from django.core.mail import send_mail
 
 User = get_user_model()
 class AddressSerializer(serializers.ModelSerializer):
@@ -30,6 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'full_name', 'password', 'username', 'role', 'confirm_password')
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -41,26 +45,28 @@ class UserSerializer(serializers.ModelSerializer):
         validated_data['password'] = make_password(validated_data.get('password'))
         user = super().create(validated_data)
 
-        # Generate verification token
+        # Generate a verification token and save the user
         user.generate_verification_token()
 
+        # Build an absolute verification link using the token
+        request = self.context.get('request')
+        # Construct verification link using FRONTEND_URL
+        verification_link = f"{settings.FRONTEND_URL}/auth/verify-email/{user.verification_token}"
+
         # Send verification email
-        verification_link = self.context['request'].build_absolute_uri(
-            reverse('verify-email', kwargs={'token': user.verification_token})
-        )
         send_mail(
-            'Verify Your Email',
-            f'Click the link to verify your email: {verification_link}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
+            subject='Verify Your Email',
+            message=f'Click the link to verify your email: {verification_link}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
             fail_silently=False,
         )
-
         return user
 
-# serializers.py
+
 class EmailVerificationSerializer(serializers.Serializer):
-    token = serializers.CharField()
+    token = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
 
 class UserProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="user.full_name", required=False)

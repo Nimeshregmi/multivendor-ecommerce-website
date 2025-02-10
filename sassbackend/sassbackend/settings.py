@@ -1,4 +1,5 @@
 
+from dotenv import load_dotenv
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -6,17 +7,14 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-from dotenv import load_dotenv
 load_dotenv()
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG','False') == 'True'
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 # DEBUG = 'True'
 AUTH_USER_MODEL = 'users.User'
 
@@ -32,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django_filters',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -46,8 +45,14 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
-        # Other authentication classes
     ),
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -58,7 +63,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-     # Add the account middleware:
+    # Add the account middleware:
     "allauth.account.middleware.AccountMiddleware",
 ]
 
@@ -163,7 +168,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 
     'allauth.account.auth_backends.AuthenticationBackend',
-   
+
 
 ]
 SOCIALACCOUNT_PROVIDERS = {
@@ -176,21 +181,22 @@ SOCIALACCOUNT_PROVIDERS = {
     },
 }
 
-BASE_API_URL='http://localhost:8000'
+BASE_API_URL = 'http://localhost:8000'
 GOOGLE_REDIRECT_URL_MAINPORTAL = BASE_API_URL + 'users/google'
-#GOOGLE_REDIRECT_URL_PORTAL = BASE_API_URL + 'users/google/portal'
+# GOOGLE_REDIRECT_URL_PORTAL = BASE_API_URL + 'users/google/portal'
 GOOGLE_REDIRECT_URL_SERVICEPORTAL = BASE_API_URL + 'users/google/service_portal'
 CLIENT_ID = os.getenv('CLIENT_ID')
-CLIENT_SECRET=os.getenv('CLIENT_SECRET')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 # Access-Control-Allow-Origin:' http://localhost:3000'
 # Access-Control-Allow-Credentials: true
 
 # Email settings for Mailtrap
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = 2525
+EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD =os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-
+# EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = 'badb44076@gmail.com'
+FRONTEND_URL = 'http://localhost:3000'
